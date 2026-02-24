@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Check Health
         id: health
         run: |
@@ -33,18 +33,30 @@ jobs:
           fi
         env:
           DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
+      - name: Create Issue on Failure
+        if: failure()
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Self-Healing: Health Check Failed',
+              body: `Health check failed.\nWorkflow: ${context.workflow}\nRun: ${context.runId}`,
+              labels: ['bug', 'deployment', 'auto-generated']
+            })
 
   dependency-updates:
     name: Auto Update Dependencies
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
       - name: Setup Node
         if: hashFiles('package.json') != ''
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
         with:
           node-version: '20'
       - name: Update dependencies
